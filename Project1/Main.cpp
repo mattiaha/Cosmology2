@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
 	double TCMB = 2.7255;
 
 	// Recombination parameters
-	double Yp = 0.245;
+	double Yp = 0.0;
 
 	// Power-spectrum parameters
 	double A_s = 2.1e-9;
@@ -36,14 +36,19 @@ int main(int argc, char** argv) {
 
 	// Output background evolution quantities
 	cosmo.output("cosmology.txt");
-
-	// Remove when module is completed
-	return 0;
-
 	//=========================================================================
 	// Module II
 	//=========================================================================
 
+	RecombinationHistory rec(&cosmo, Yp);
+	rec.solve();
+	rec.info();
+
+	// Output recombination quantities
+	rec.output("recombination.txt");
+	
+
+	
 	
 
 	Utils::EndTiming("Everything");
