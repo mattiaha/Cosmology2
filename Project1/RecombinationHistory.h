@@ -56,7 +56,7 @@ private:
     Spline dtaudx_of_x_spline{ "dtau" };
     Spline g_tilde_of_x_spline{ "g" };
     Spline Xe_Saha_spline{ "saha" };
-
+    Spline ne_Saha_spline{ "ne_saha" };
 
 public:
 
@@ -86,6 +86,9 @@ public:
     double ne_of_x(double x) const;
     double get_Yp() const;
     double Saha_Xe_of_x(double x) const;
+    double Saha_ne_of_x(double x) const;
+    double saha_dtaudx_of_x(double x) const;
+
 };
 
 #endif#pragma once
