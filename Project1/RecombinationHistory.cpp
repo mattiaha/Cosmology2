@@ -38,13 +38,17 @@ void RecombinationHistory::solve_number_density_electrons() {
     Vector Xe_arr(npts_rec_arrays);
     Vector ne_arr(npts_rec_arrays);
     Vector Xe_saha(npts_rec_arrays);
+    Vector ne_saha(npts_rec_arrays);
 
     for (int i = 0; i < npts_rec_arrays; i++) {
         auto Xe_ne_data = electron_fraction_from_saha_equation(x_array[i]);
 
         Xe_saha[i] = Xe_ne_data.first;
+        ne_saha[i] = Xe_ne_data.second;
     }
     Xe_Saha_spline.create(x_array, Xe_saha, "saha");
+    ne_Saha_spline.create(x_array, ne_saha, "ne_saha");
+
     // Calculate recombination history
     bool saha_regime = true;
     for (int i = 0; i < npts_rec_arrays; i++) {
@@ -72,9 +76,7 @@ void RecombinationHistory::solve_number_density_electrons() {
 
             auto Xe_ne_data = electron_fraction_from_saha_equation(x_array[i]);
             const double Xe_init = Xe_ne_data.first;
-            std::cout << "Xe is" << Xe_init << "\n";
-
-            std::cout << "end of saha at:" << i << "\n";
+            std::cout << "end of saha at x=" << x_array[i] << "\n";
             Vector Xe_ini{ Xe_init};
             Vector Peeb_x_array= Utils::linspace(x_array[i],x_end, npts_rec_arrays-i) ;
             // The Peebles ODE equation
@@ -266,9 +268,32 @@ void RecombinationHistory::solve_for_optical_depth_tau() {
             break;
         }
     }
+    Vector saha_init{ 0.0 };
+    // Find x and z for decoupling when we only use Saha
+    ODEFunction sahadtaudx = [&](double x, const double* tau, double* sahadtaudx) {
+        sahadtaudx[0] = saha_dtaudx_of_x(x);
 
+        return GSL_SUCCESS;
+    };
+    ODESolver saha_tau_ODE;
+    saha_tau_ODE.solve(sahadtaudx, x_array, saha_init);
+    auto saha_tau_arr = saha_tau_ODE.get_data_by_component(0);
+
+    for (int j = 0; j < npts_rec_arrays; j++) {
+        saha_tau_arr[j] -= saha_tau_arr[npts_rec_arrays - 1];
+    }
+    for (int b = 1; b < npts_rec_arrays; b++) {
+        if (saha_tau_arr[b] < 1.) {
+            std::cout << "For the Saha equation, Tau = 1 at x = " << x_array[b - 1] << "  , z = " << cosmo->get_z(x_array[b - 1]) << "\n";
+            break;
+        }
+    }
+
+    // Spline results
     tau_of_x_spline.create(x_array, tau_arr, "tau");
     dtaudx_of_x_spline.create(x_array, tau_deriv, "dtau");
+    // Calculate g tilde
+
     Vector g_tilde(npts_rec_arrays) ;
     for (int i = 0; i < npts_rec_arrays; i++) {
         g_tilde[i] = -dtaudx_of_x(x_array[i]) * exp(-tau_of_x(x_array[i]));
@@ -293,6 +318,14 @@ double RecombinationHistory::dtaudx_of_x(double x) const {
     return -c * sigma_T * ne_of_x(x) / H;;
 }
 
+double RecombinationHistory::saha_dtaudx_of_x(double x) const {
+    const double c = Constants.c;
+    const double sigma_T = Constants.sigma_T;
+    double H = cosmo->H_of_x(x);
+    return -c * sigma_T * Saha_ne_of_x(x) / H;;
+}
+
+
 double RecombinationHistory::ddtauddx_of_x(double x) const {
 
     return dtaudx_of_x_spline.deriv_x(x);
@@ -304,6 +337,11 @@ double RecombinationHistory::g_tilde_of_x(double x) const {
 double RecombinationHistory::Saha_Xe_of_x(double x) const {
     return Xe_Saha_spline(x);
 }
+double RecombinationHistory::Saha_ne_of_x(double x) const {
+    return ne_Saha_spline(x);
+}
+
+
 
 double RecombinationHistory::dgdx_tilde_of_x(double x) const {
     return g_tilde_of_x_spline.deriv_x(x);
