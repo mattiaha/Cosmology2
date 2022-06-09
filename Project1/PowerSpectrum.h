@@ -77,6 +77,10 @@ private:
     // Splines of the reusult of the LOS integration
     // Theta_ell(k) and ThetaE_ell(k) for polarization
     Spline2D thetaT_ell_of_k_spline{"thetaT_ell_of_k_spline"};
+    Spline2D SW_ell_of_k_spline{ "SW_ell_of_k_spline" };
+    Spline2D ISW_ell_of_k_spline{"ISW_ell_of_k_spline"};
+    Spline2D Doppler_ell_of_k_spline{ "Doppler_ell_of_k_spline" };
+    Spline2D Term4_ell_of_k_spline{"Term4_ell_of_k_spline"};
     std::vector<Spline> thetaE_ell_of_k_spline;
 
     //=====================================================================
@@ -93,6 +97,10 @@ private:
 
     // Splines with the power-spectra
     Spline cell_TT_spline{ "cell_TT_spline" };
+    Spline cell_SW_spline{ "cell_SW_spline" };
+    Spline cell_ISW_spline{ "cell_ISW_spline" };
+    Spline cell_Doppler_spline{ "cell_Doppler_spline" };
+    Spline cell_Term4_spline{ "cell_Term4_spline" };
     Spline cell_TE_spline{ "cell_TE_spline" };
     Spline cell_EE_spline{ "cell_EE_spline" };
     Spline MPS_spline{ "MatterPowerSpectrum" };
