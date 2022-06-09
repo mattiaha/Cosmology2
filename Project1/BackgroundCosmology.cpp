@@ -50,14 +50,16 @@ void BackgroundCosmology::solve() {
         detadx[0] = 1/Hp_of_x(x);
         return GSL_SUCCESS;
     };
-    double etaini = 0.0;
+    double etaini = 1/Hp_of_x(x_start);
     Vector eta{ etaini };
     ODESolver ode;
     ode.solve(detadx, x_array, eta);
     auto eta_array = ode.get_data_by_component(0);
     
     eta_of_x_spline.create(x_array, eta_array, "eta_of_x");
-    
+    std::cout << "eta at -7 is " << eta_of_x_spline(-7.0) << "\n";  
+    std::cout << "Hp at -7 is " << Hp_of_x(-7.0) << "\n" ;
+
     //=============================================================================
     // TODO: Set the initial condition, set up the ODE system, solve and make
     // the spline eta_of_x_spline 
@@ -76,6 +78,7 @@ void BackgroundCosmology::solve() {
     t_of_x_spline.create(x_array, time_array, "t_of_x");
     std::cout << "The age of the universe is:" << t_of_x_spline(0)/GYear << " Gigayears" << "\n";
     std::cout << "The conformal time today is: " << eta_of_x_spline(0) / GYear << " Gigayears"<< "\n";
+
 }
 
 //====================================================
@@ -94,12 +97,12 @@ double BackgroundCosmology::Hp_of_x(double x) const {
 
 double BackgroundCosmology::dHpdx_of_x(double x) const {
 
-    return (-exp(-2.0*x)*(OmegaB+OmegaCDM) -2.0*exp(-3.0*x)*OmegaR+2.0*exp(x)*OmegaLambda)/(2.0*sqrt((OmegaB + OmegaCDM) * exp(-3.0*x) + (OmegaR) * exp(-4.0 * x) + OmegaLambda));
+    return H0*(-exp(-2.0*x)*(OmegaB+OmegaCDM) -2.0*exp(-3.0*x)*OmegaR+2.0*exp(x)*OmegaLambda)/(2.0*sqrt((OmegaB + OmegaCDM) * exp(-3.0*x) + (OmegaR) * exp(-4.0 * x) + OmegaLambda));
 }
 
 double BackgroundCosmology::ddHpddx_of_x(double x) const {
     
-    return (exp(-3 * x) * (exp(2 * x) * (pow(OmegaB + OmegaCDM, 2) + 14 * (OmegaB + OmegaCDM) * OmegaLambda * exp(3 * x) + 4 * pow(OmegaLambda, 2) * exp(6 * x)) + 6 * OmegaR * exp(x) * ((OmegaB + OmegaCDM) + 4 * OmegaLambda * exp(3 * x)) + 4 * OmegaR * OmegaR)) / (4 * ((OmegaR + (OmegaB + OmegaCDM) * exp(x)) + OmegaLambda * exp(4 * x)) * sqrt(OmegaLambda + exp(-4 * x) * (OmegaR + (OmegaB + OmegaCDM) * exp(x))));
+    return H0*(exp(-3 * x) * (exp(2 * x) * (pow(OmegaB + OmegaCDM, 2) + 14 * (OmegaB + OmegaCDM) * OmegaLambda * exp(3 * x) + 4 * pow(OmegaLambda, 2) * exp(6 * x)) + 6 * OmegaR * exp(x) * ((OmegaB + OmegaCDM) + 4 * OmegaLambda * exp(3 * x)) + 4 * OmegaR * OmegaR)) / (4 * ((OmegaR + (OmegaB + OmegaCDM) * exp(x)) + OmegaLambda * exp(4 * x)) * sqrt(OmegaLambda + exp(-4 * x) * (OmegaR + (OmegaB + OmegaCDM) * exp(x))));
 }
 
 
@@ -200,11 +203,11 @@ void BackgroundCosmology::info() const {
 //====================================================
 void BackgroundCosmology::output(const std::string filename) const {
     const double x_min = -18.0;
-    const double x_max = 1.0;
+    const double x_max = 2.0;
     const int    n_pts = 10001;
 
     Vector x_array = Utils::linspace(x_min, x_max, n_pts);
-
+    std::cout << "K_equality is " << exp(-8.657) * H_of_x(-8.657) / Constants.c << "\n";
 
     std::ofstream fp(filename.c_str());
     auto print_data = [&](const double x) {
@@ -212,13 +215,13 @@ void BackgroundCosmology::output(const std::string filename) const {
         fp << x << " ";
         fp << eta_of_x(x)*Constants.c/Constants.Mpc << " ";
         fp << Hp_of_x(x)/H0 << " ";
-        fp << dHpdx_of_x(x) << " ";
+        fp << dHpdx_of_x(x)/H0 << " ";
         fp << get_OmegaB(x) << " ";
         fp << get_OmegaCDM(x) << " ";
         fp << get_OmegaLambda(x) << " ";
         fp << get_OmegaR(x) << " ";
         fp << H_of_x(x) / H0<< " ";
-        fp << ddHpddx_of_x(x) << " ";
+        fp << ddHpddx_of_x(x)/H0 << " ";
         fp << t_of_x(x)/GYear << " ";
         fp << get_z(x) << " ";
         fp << get_dL(x) << " ";
