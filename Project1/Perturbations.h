@@ -12,7 +12,6 @@
 
 using Vector = std::vector<double>;
 using Vector2D = std::vector<Vector>;
-
 class Perturbations {
 private:
 
@@ -20,12 +19,12 @@ private:
     RecombinationHistory* rec = nullptr;
 
     // The scales we integrate over
-    const int n_k = 100;
+    const int n_k = 1000;
     const double k_min = Constants.k_min;
     const double k_max = Constants.k_max;
 
     // Start and end of the time-integration
-    const int n_x = 10000;
+    const int n_x = 1000;
     const double x_start = Constants.x_start;
     const double x_end = Constants.x_end;
 
@@ -44,12 +43,13 @@ private:
     Spline2D Theta2_spline{ "Theta2" };
 
 
-
-
     // Splines of source functions (ST for temperature; SE for polarization)
     Spline2D ST_spline{ "ST_spline" };
     Spline2D SE_spline{ "SE_spline" };
-
+    Spline2D SW_spline{ "SW_spline" };
+    Spline2D ISW_spline{ "ISW_spline" };
+    Spline2D Doppler_spline{ "Doppler_spline" };
+    Spline2D Term4_spline{ "term4_spline" };
     // Splines of mulipole quantities
     // NB: If you use there you have to allocate the container first
     // e.g. Theta_spline = std::vector<Spline2D>(n_ell_theta); before using it
@@ -125,6 +125,16 @@ public:
     double get_Theta2(const double x, const double k) const;
     double get_Source_T(const double x, const double k) const;
     double get_Source_E(const double x, const double k) const;
+    double get_dTheta2(const double x, const double k) const;
+    double get_dPsi(const double x, const double k) const;
+    double get_dPhi(const double x, const double k) const;
+    double get_dv_b(const double x, const double k) const;
+    double get_ddTheta2(const double x, const double k) const;
+    double get_SW(const double x, const double k) const;
+    double get_ISW(const double x, const double k) const;
+    double get_Doppler(const double x, const double k) const;
+    double get_Term4(const double x, const double k) const;
+    
 };
 
 #endif
