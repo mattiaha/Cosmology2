@@ -60,7 +60,7 @@ void RecombinationHistory::solve_number_density_electrons() {
         auto Xe_ne_data = electron_fraction_from_saha_equation(x_array[i]);
         
 
-        // Electron fraction and number density
+        // Electron fraction and number density         
         const double Xe_current = Xe_ne_data.first;
         const double ne_current = Xe_ne_data.second;
         // Are we still in the Saha regime?
@@ -239,7 +239,7 @@ void RecombinationHistory::solve_for_optical_depth_tau() {
     const double c = Constants.c;
     const double sigma_T = Constants.sigma_T;
     // const int npts = 1000;
-    Vector x_array = Utils::linspace(x_start, x_end, npts_rec_arrays);
+    Vector x_array = Utils::linspace(x_end, x_start, npts_rec_arrays);
     ODEFunction dtaudx = [&](double x, const double* tau, double* dtaudx) {
         dtaudx[0] = dtaudx_of_x(x);
 
@@ -250,19 +250,17 @@ void RecombinationHistory::solve_for_optical_depth_tau() {
     Vector tau_deriv(npts_rec_arrays);
     tau_ODE.solve(dtaudx,x_array,tau_init);
     auto tau_arr = tau_ODE.get_data_by_component(0);
-    //
-
     for (int j = 0; j < npts_rec_arrays; j++) {
-        const double tol = 1E-8;
+        /*const double tol = 1E-8;
         tau_arr[j] -= tau_arr[npts_rec_arrays - 1]; 
         if (tau_arr[j] < tol) {
             tau_arr[j] = 0.0;
-        }
+        }*/
         tau_deriv[j] = dtaudx_of_x(x_array[j]);
         
     }
     // Find the x and z for decoupling
-    for (int k = 0; k < npts_rec_arrays; k++) {
+    /*for (int k = 1; k < npts_rec_arrays; k++) {
         if (tau_arr[k] < 1.) {
             std::cout << "Tau = 1 at x = " << x_array[k - 1] << "  , z = " << cosmo->get_z(x_array[k-1]) << "\n";
             break;
@@ -288,6 +286,10 @@ void RecombinationHistory::solve_for_optical_depth_tau() {
             break;
         }
     }
+    */
+    std::reverse(x_array.begin(), x_array.end());
+    std::reverse(tau_arr.begin(), tau_arr.end());
+    std::reverse(tau_deriv.begin(), tau_deriv.end());
 
     // Spline results
     tau_of_x_spline.create(x_array, tau_arr, "tau");
@@ -382,7 +384,6 @@ void RecombinationHistory::output(const std::string filename) const {
     const int npts = 5000;
     const double x_min = x_start;
     const double x_max = x_end;
-
     Vector x_array = Utils::linspace(x_min, x_max, npts);
     auto print_data = [&](const double x) {
         fp << x << " ";
