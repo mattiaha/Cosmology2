@@ -2,7 +2,7 @@
 #include "BackgroundCosmology.h"
 #include "RecombinationHistory.h"
 #include "Perturbations.h"
-
+#include "PowerSpectrum.h"
 int main(int argc, char** argv) {
 	Utils::StartTiming("Everything");
 
@@ -60,9 +60,14 @@ int main(int argc, char** argv) {
 	pert.output(kvalue2, "perturbations_k0.01.txt");
 	double kvalue3 = 0.1 / Constants.Mpc;
 	pert.output(kvalue3, "perturbations_k0.1.txt");
-	// Remove when module is completed
-	return 0;
+	
+	PowerSpectrum power(&cosmo, &rec, &pert, A_s, n_s, kpivot_mpc);
+	power.solve();
+	power.output("cells.txt");
+	power.MPSoutput("MPS.txt");
+	
 	
 
 	Utils::EndTiming("Everything");
+	return 0;
 }
